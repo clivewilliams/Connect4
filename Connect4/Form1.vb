@@ -84,11 +84,11 @@
 
     End Sub
 
-    Public Function ValidColumn(ByRef b As board, col As Integer) As Boolean
+    Private Function ValidColumn(ByRef b As board, col As Integer) As Boolean
         Return b.cells(col, 0).value = 0
     End Function
 
-    Public Function PlaceCounter(ByRef b As board, col As Integer, player As Integer) As Boolean
+    Private Function PlaceCounter(ByRef b As board, col As Integer, player As Integer) As Boolean
         ' col is 0 to 6, not 1 to 7
         For i As Integer = b.cells.GetLowerBound(1) To b.cells.GetUpperBound(1)
             If b.cells(col, i).value <> 0 Then
@@ -107,14 +107,14 @@
         Return True
     End Function
 
-    Public Sub DisplayBoard(ByRef b As board)
+    Private Sub DisplayBoard(ByRef b As board)
 
         Dim s As String
         For j As Integer = b.cells.GetLowerBound(1) To b.cells.GetUpperBound(1)
             For i As Integer = b.cells.GetLowerBound(0) To b.cells.GetUpperBound(0)
                 s = s & b.cells(i, j).value.ToString() & " "
             Next
-        s = s & vbCrLf
+            s = s & vbCrLf
         Next
         s = s & b.status & vbCrLf
 
@@ -123,6 +123,86 @@
         Application.DoEvents()
 
     End Sub
+
+    Private Function GetCell(ByRef b As board, col As Integer, row As Integer)
+        Dim i As Integer = 0
+        If (col < 0 Or col >= consts.cols) Then ' off end of board
+            Return -1
+        End If
+        If (row < 0 Or row >= consts.rows) Then
+            Return -1
+        End If
+        Return b.cells(col, row)
+    End Function
+
+    Private Function ScoreMove(ByRef b As board, col As Integer, row As Integer, player As Integer) As Integer
+
+        Dim dcol() As Integer = {0, 1, 1, 1, 0, -1, -1, -1}
+        Dim drow() As Integer = {1, 1, 0, -1, -1, -1, 0, 1}
+        Dim scores() As Integer = {0, 0, 0, 0, 0, 0, 0, 0}
+        Dim highscore As Integer = 0
+        Dim highcount As Integer = 0
+
+        For d As Integer = 0 To 7
+            Dim scol As Integer = col
+            Dim srow As Integer = row
+
+            While (GetCell(b, scol, srow) = player) ' go back, until we've found one end of the line
+                scol = scol - dcol(d)
+                srow = srow - drow(d)
+            End While
+            scol = scol + dcol(d) ' we went back one place too far; undo that
+            srow = srow + drow(d)
+
+            Dim howmany As Integer = 0
+            While (GetCell(b, scol, srow) = player) Or ((scol = col) And (srow = row))  ' go forward, until we've found one end of the line
+                scol = scol + dcol(d)
+                srow = srow + drow(d)
+                howmany = howmany + 1
+            End While
+
+            ' Now scol and srow are pointing at the space at the end of the line, and howmany is the number of counters in this sequence. 
+
+            If (GetCell(b, scol, srow) = 0) Then
+                ' It's a valid move
+
+                scores(d) = howmany * 100
+                If (GetCellPos(b, scol) = srow) Then
+                    ' we could conceivably play there next time, so score this better.
+                    scores(d) = scores(d) + 50
+                End If
+
+                If (howmany = highscore) Then
+                    highcount = highcount + 1
+                End If
+                If (howmany > highscore) Then
+                    highcount = 0
+                    highscore = howmany
+                End If
+            End If
+
+        Next
+        highscore = highscore + highcount - 1 ' being able to do something twice beats being able to do it once
+        Return highscore
+
+    End Function
+
+    Private Function GetCellPos(ByRef b As board, col As Integer) As Integer
+        ' col is 0 to 6, not 1 to 7
+        For i As Integer = b.cells.GetLowerBound(1) To b.cells.GetUpperBound(1)
+            If b.cells(col, i).value <> 0 Then
+                ' We've found a cell. Let's try and place a counter in the cell above. 
+                If i = b.cells.GetLowerBound(1) Then
+                    ' There is no space, error
+                    Return -1
+                Else
+                    Return i ' done
+                End If
+            End If
+        Next
+        ' Otherwise stick it on the bottom
+        Return b.cells.GetUpperBound(1)
+    End Function
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 

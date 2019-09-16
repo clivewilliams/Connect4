@@ -7,6 +7,7 @@ Public Class board
 
     Public cells(,) As cell = Nothing
     Public status As String = "" ' when non-empty, the game is finished. 
+    Public boardscore As Integer = 0
 
     Public Sub New()
         ReDim cells(consts.cols - 1, consts.rows - 1)
@@ -17,7 +18,6 @@ Public Class board
 
             For j As Integer = cells.GetLowerBound(1) To cells.GetUpperBound(1)
                 cells(i, j) = New cell
-                cells(i, j).value = 0
             Next
 
         Next
@@ -34,5 +34,7 @@ End Class
 Public Class cell
 
     Public value As Integer = 0
+    Public scores() As Integer = {0, 0, 0, 0, 0, 0, 0, 0} ' N, NE, E, SE, S, SW, W, NW
+    Public cellscore As Integer = 0
 
 End Class
