@@ -8,6 +8,7 @@ Public Class board
     Public cells(,) As cell = Nothing
     Public status As String = "" ' when non-empty, the game is finished. 
     Public boardscore As Integer = 0
+    Public notes As String = ""
 
     Public Sub New()
         ReDim cells(consts.cols - 1, consts.rows - 1)

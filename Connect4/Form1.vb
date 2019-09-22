@@ -52,14 +52,30 @@
     Public Sub MakeCPUMove(ByRef b As board, player As Integer)
 
         Dim col As Integer = 1
-        Dim x As MsgBoxResult = MsgBox("Player " & player.ToString & " moves column " & col.ToString, vbOKCancel, "Player " & player.ToString)
-        If x = vbCancel Then
-            b.status = "Player " & player.ToString & " quit!"
-        End If
+        Dim topscore As Integer = -1
+        b.notes = ""
+
+        For i As Integer = 0 To consts.cols - 1
+            Dim thisscore As Integer = ScoreMove(b, i, player)
+            b.notes = b.notes & thisscore & " "
+            If thisscore > topscore OrElse ((thisscore = topscore) And (New Random().Next(2) = 1)) Then
+                col = i
+                topscore = thisscore
+            End If
+            If thisscore >= 400 Then
+                b.status = "Player " & player.ToString & " wins!"
+            End If
+        Next
+
         Dim ok As Boolean = False
 
         If ValidColumn(b, col) Then
-            ok = PlaceCounter(b, col - 1, player)
+            ok = PlaceCounter(b, col, player)
+        End If
+        DisplayBoard(b) ' so we see the updated notes
+        Dim x As MsgBoxResult = MsgBox("Player " & player.ToString & " moves column " & (col + 1).ToString, vbOKCancel, "Player " & player.ToString)
+        If x = vbCancel Then
+            b.status = "Player " & player.ToString & " quit!"
         End If
 
     End Sub
@@ -77,7 +93,12 @@
             End If
             If Len(x) = 1 And IsNumeric(x) Then
                 If CInt(x) <= consts.cols And CInt(x) > 0 Then
+                    Dim thisscore As Integer = ScoreMove(b, x - 1, player)
                     ok = PlaceCounter(b, x - 1, player)
+                    If thisscore >= 400 Then
+                        b.status = "Player " & player.ToString & " wins!"
+                        Exit Sub
+                    End If
                 End If
             End If
         End While
@@ -89,7 +110,7 @@
     End Function
 
     Private Function PlaceCounter(ByRef b As board, col As Integer, player As Integer) As Boolean
-        ' col is 0 to 6, not 1 to 7
+        ' col is 0 to 6, not 1 to 7S
         For i As Integer = b.cells.GetLowerBound(1) To b.cells.GetUpperBound(1)
             If b.cells(col, i).value <> 0 Then
                 ' We've found a cell. Let's try and place a counter in the cell above. 
@@ -109,7 +130,7 @@
 
     Private Sub DisplayBoard(ByRef b As board)
 
-        Dim s As String
+        Dim s As String = ""
         For j As Integer = b.cells.GetLowerBound(1) To b.cells.GetUpperBound(1)
             For i As Integer = b.cells.GetLowerBound(0) To b.cells.GetUpperBound(0)
                 s = s & b.cells(i, j).value.ToString() & " "
@@ -117,6 +138,7 @@
             s = s & vbCrLf
         Next
         s = s & b.status & vbCrLf
+        s = s & b.notes & vbCrLf
 
         tbDisplay.Text = s
         tbDisplay.Refresh()
@@ -124,7 +146,7 @@
 
     End Sub
 
-    Private Function GetCell(ByRef b As board, col As Integer, row As Integer)
+    Private Function GetCell(ByRef b As board, col As Integer, row As Integer) As Integer
         Dim i As Integer = 0
         If (col < 0 Or col >= consts.cols) Then ' off end of board
             Return -1
@@ -132,10 +154,10 @@
         If (row < 0 Or row >= consts.rows) Then
             Return -1
         End If
-        Return b.cells(col, row)
+        Return b.cells(col, row).value
     End Function
 
-    Private Function ScoreMove(ByRef b As board, col As Integer, row As Integer, player As Integer) As Integer
+    Private Function ScoreMove(ByRef b As board, col As Integer, player As Integer) As Integer
 
         Dim dcol() As Integer = {0, 1, 1, 1, 0, -1, -1, -1}
         Dim drow() As Integer = {1, 1, 0, -1, -1, -1, 0, 1}
@@ -143,11 +165,14 @@
         Dim highscore As Integer = 0
         Dim highcount As Integer = 0
 
+        Dim row As Integer = GetCellPos(b, col)
+        Dim exp As String = ""
+
         For d As Integer = 0 To 7
             Dim scol As Integer = col
             Dim srow As Integer = row
 
-            While (GetCell(b, scol, srow) = player) ' go back, until we've found one end of the line
+            While (GetCell(b, scol, srow) = player) Or ((scol = col) And (srow = row)) ' go back, until we've found one end of the line
                 scol = scol - dcol(d)
                 srow = srow - drow(d)
             End While
@@ -172,16 +197,23 @@
                     scores(d) = scores(d) + 50
                 End If
 
-                If (howmany = highscore) Then
+                If (scores(d) = highscore) Then
                     highcount = highcount + 1
                 End If
-                If (howmany > highscore) Then
+                If (scores(d) > highscore) Then
                     highcount = 0
-                    highscore = howmany
+                    highscore = scores(d)
                 End If
+            Else
+                scores(d) = -1
             End If
+            If exp <> "" Then
+                exp = exp & "/"
+            End If
+            exp = exp & scores(d).ToString
 
         Next
+        b.notes = b.notes & vbCrLf & "[" & exp & "] "
         highscore = highscore + highcount - 1 ' being able to do something twice beats being able to do it once
         Return highscore
 
