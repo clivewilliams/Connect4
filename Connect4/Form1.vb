@@ -52,7 +52,7 @@
     Public Sub MakeCPUMove(ByRef b As board, player As Integer)
 
         Dim col As Integer = 1
-        Dim topscore As Integer = -1
+        Dim topscore As Integer = -99999
         b.notes = ""
 
         For i As Integer = 0 To consts.cols - 1
@@ -108,25 +108,25 @@
     End Sub
 
     Private Function ValidColumn(ByRef b As board, col As Integer) As Boolean
-        Return b.cells(col, 0).value = 0
+        Return b.cells(col, 0) = 0
     End Function
 
     Private Function PlaceCounter(ByRef b As board, col As Integer, player As Integer) As Boolean
         ' col is 0 to 6, not 1 to 7S
         For i As Integer = b.cells.GetLowerBound(1) To b.cells.GetUpperBound(1)
-            If b.cells(col, i).value <> 0 Then
+            If b.cells(col, i) <> 0 Then
                 ' We've found a cell. Let's try and place a counter in the cell above. 
                 If i = b.cells.GetLowerBound(1) Then
                     ' There is no space, error
                     Return False
                 Else
-                    b.cells(col, i - 1).value = player
+                    b.cells(col, i - 1) = player
                     Return True ' done
                 End If
             End If
         Next
         ' Otherwise stick it on the bottom
-        b.cells(col, b.cells.GetUpperBound(1)).value = player
+        b.cells(col, b.cells.GetUpperBound(1)) = player
         Return True
     End Function
 
@@ -135,7 +135,7 @@
         Dim s As String = ""
         For j As Integer = b.cells.GetLowerBound(1) To b.cells.GetUpperBound(1)
             For i As Integer = b.cells.GetLowerBound(0) To b.cells.GetUpperBound(0)
-                s = s & b.cells(i, j).value.ToString() & " "
+                s = s & b.cells(i, j).ToString() & " "
             Next
             s = s & vbCrLf
         Next
@@ -157,7 +157,7 @@
         If (row < 0 Or row >= consts.rows) Then
             Return -1
         End If
-        Return b.cells(col, row).value
+        Return b.cells(col, row)
     End Function
 
     Private Function ScoreMove(ByRef b As board, col As Integer, player As Integer, ply As Integer) As Integer
@@ -166,11 +166,16 @@
         Dim drow() As Integer = {1, 1, 0, -1, -1, -1, 0, 1}
         Dim dir() As String = {"S", "SE", "E", "NE", "N", "NW", "W", "SW"}
         Dim scores() As Integer = {0, 0, 0, 0, 0, 0, 0, 0}
+        Dim howmanys() As Integer = {0, 0, 0, 0, 0, 0, 0, 0}
         Dim highscore As Integer = 0
         Dim highcount As Integer = 0
 
-        Dim row As Integer = GetCellPos(b, col) - 1
+        Dim row As Integer = GetCellPos(b, col)
+        If row < 0 Then
+            Return -9999
+        End If
         Dim exp As String = ""
+        Dim exp2 As String = ""
         Dim bestotherscore As Integer = -9999
 
         For d As Integer = 0 To 7
@@ -191,12 +196,24 @@
                 howmany = howmany + 1
             End While
 
+            Dim usefulmove As Boolean = True ' assume the best
+            If GetCell(b, scol, srow) <> 0 And howmany <= 3 Then
+                usefulmove = False ' the square at the end of the line is not blank, so trying for a line here makes no sense. 
+            End If
+            If GetCell(b, scol + dcol(d), srow + drow(d)) <> 0 And howmany <= 2 Then
+                usefulmove = False ' the square next to that is not blank, so trying for a line here makes no sense. 
+            End If
+            If GetCell(b, scol + dcol(d) + dcol(d), srow + drow(d) + drow(d)) <> 0 And howmany <= 1 Then
+                usefulmove = False ' the logical conclusion, but really not a lot of use to know. 
+            End If
+
             ' Now scol and srow are pointing at the space at the end of the line, and howmany is the number of counters in this sequence. 
 
-            If (GetCell(b, scol, srow) = 0) Then
-                ' It's a valid move
+            If (usefulmove) Then
+                ' It's a move with a chance of completing 4 in a row
 
                 scores(d) = howmany * 100
+                howmanys(d) = howmany
                 If (GetCellPos(b, scol) = srow) Then
                     ' we could conceivably play there next time, so score this better.
                     scores(d) = scores(d) + 50
@@ -216,29 +233,38 @@
                 exp = exp & " / "
             End If
             exp = exp & dir(d) & ":" & scores(d).ToString
+        Next
 
+        Dim bestothermove As String = ""
+        If ply >= 1 And ply <= 1 And highscore < 400 Then ' Recursively figure out the best move for the other player
+            Dim b2 As board = b.Clone()
+            Dim otherplayer As Integer = 3 - player
+            If (PlaceCounter(b2, col, player)) Then
+                For j As Integer = 0 To consts.cols - 1
+                    Dim thisotherscore As Integer = ScoreMove(b2, j, otherplayer, ply + 1)
+                    If thisotherscore > -9999 Then
+                        If exp2 <> "" Then
+                            exp2 = exp2 & " / "
+                        End If
+                        exp2 = exp2 & (j + 1).ToString() & ":" & thisotherscore.ToString
 
-            If ply >= 1 And ply <= 1 And highscore < 400 Then
-                Dim b2 As board = b.Clone()
-                Dim otherplayer As Integer = 3 - player
-                If (PlaceCounter(b2, col, player)) Then
-                    For j As Integer = 0 To consts.cols - 1
-                        Dim thisotherscore As Integer = ScoreMove(b2, j, otherplayer, ply + 1)
                         If thisotherscore > bestotherscore Then
                             bestotherscore = thisotherscore
+                            bestothermove = (j + 1).ToString & ":" & bestotherscore
                         End If
                         If (bestotherscore >= 400) Then
                             GoTo LeaveLoop
                         End If
-                    Next
+                    End If
+                Next
 LeaveLoop:
-                    highscore = highscore - bestotherscore
-                End If
+                highscore = highscore - bestotherscore
             End If
+        End If
 
-        Next
-
-        b.notes = b.notes & vbCrLf & player.ToString() & ": " & ply.ToString & ": " & (col + 1).ToString() & " [" & exp & "] " & highscore & ": " & bestotherscore.ToString
+        If ply = 1 Then
+            b.notes = b.notes & vbCrLf & player.ToString() & ": " & ply.ToString & ": " & (col + 1).ToString() & " [" & exp & "] {" & exp2 & "} " & highscore & ": " & bestothermove.ToString
+        End If
         highscore = highscore + highcount ' being able to do something twice beats being able to do it once
 
         Return highscore
@@ -247,14 +273,17 @@ LeaveLoop:
 
     Private Function GetCellPos(ByRef b As board, col As Integer) As Integer
         ' col is 0 to 6, not 1 to 7
+        If col < 0 Or col >= consts.cols Then
+            Return -1
+        End If
         For i As Integer = b.cells.GetLowerBound(1) To b.cells.GetUpperBound(1)
-            If b.cells(col, i).value <> 0 Then
+            If b.cells(col, i) <> 0 Then
                 ' We've found a cell. Let's try and place a counter in the cell above. 
                 If i = b.cells.GetLowerBound(1) Then
                     ' There is no space, error
                     Return -1
                 Else
-                    Return i ' done
+                    Return i - 1 ' done
                 End If
             End If
         Next
