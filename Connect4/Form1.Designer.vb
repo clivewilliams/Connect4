@@ -30,6 +30,8 @@ Partial Class Form1
         Me.PlayerVPlayerToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
         Me.tbDisplay = New System.Windows.Forms.TextBox()
         Me.tbNotes = New System.Windows.Forms.TextBox()
+        Me.Label1 = New System.Windows.Forms.Label()
+        Me.Label2 = New System.Windows.Forms.Label()
         Me.MenuStrip1.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -58,20 +60,20 @@ Partial Class Form1
         'PlayerVCPUToolStripMenuItem1
         '
         Me.PlayerVCPUToolStripMenuItem1.Name = "PlayerVCPUToolStripMenuItem1"
-        Me.PlayerVCPUToolStripMenuItem1.Size = New System.Drawing.Size(86, 20)
-        Me.PlayerVCPUToolStripMenuItem1.Text = "Player v CPU"
+        Me.PlayerVCPUToolStripMenuItem1.Size = New System.Drawing.Size(111, 20)
+        Me.PlayerVCPUToolStripMenuItem1.Text = "Player O  v CPU X"
         '
         'CPUVPlayerToolStripMenuItem1
         '
         Me.CPUVPlayerToolStripMenuItem1.Name = "CPUVPlayerToolStripMenuItem1"
-        Me.CPUVPlayerToolStripMenuItem1.Size = New System.Drawing.Size(86, 20)
-        Me.CPUVPlayerToolStripMenuItem1.Text = "CPU v Player"
+        Me.CPUVPlayerToolStripMenuItem1.Size = New System.Drawing.Size(108, 20)
+        Me.CPUVPlayerToolStripMenuItem1.Text = "CPU O v Player X"
         '
         'PlayerVPlayerToolStripMenuItem1
         '
         Me.PlayerVPlayerToolStripMenuItem1.Name = "PlayerVPlayerToolStripMenuItem1"
-        Me.PlayerVPlayerToolStripMenuItem1.Size = New System.Drawing.Size(95, 20)
-        Me.PlayerVPlayerToolStripMenuItem1.Text = "Player v Player"
+        Me.PlayerVPlayerToolStripMenuItem1.Size = New System.Drawing.Size(117, 20)
+        Me.PlayerVPlayerToolStripMenuItem1.Text = "Player O v Player X"
         '
         'tbDisplay
         '
@@ -80,7 +82,7 @@ Partial Class Form1
         Me.tbDisplay.Multiline = True
         Me.tbDisplay.Name = "tbDisplay"
         Me.tbDisplay.ReadOnly = True
-        Me.tbDisplay.Size = New System.Drawing.Size(237, 184)
+        Me.tbDisplay.Size = New System.Drawing.Size(365, 273)
         Me.tbDisplay.TabIndex = 1
         '
         'tbNotes
@@ -89,19 +91,37 @@ Partial Class Form1
             Or System.Windows.Forms.AnchorStyles.Left) _
             Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.tbNotes.Font = New System.Drawing.Font("Courier New", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.tbNotes.Location = New System.Drawing.Point(264, 28)
+        Me.tbNotes.Location = New System.Drawing.Point(384, 28)
         Me.tbNotes.Multiline = True
         Me.tbNotes.Name = "tbNotes"
         Me.tbNotes.ReadOnly = True
         Me.tbNotes.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.tbNotes.Size = New System.Drawing.Size(1105, 555)
+        Me.tbNotes.Size = New System.Drawing.Size(985, 555)
         Me.tbNotes.TabIndex = 2
+        '
+        'Label1
+        '
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(13, 318)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(0, 13)
+        Me.Label1.TabIndex = 3
+        '
+        'Label2
+        '
+        Me.Label2.AutoSize = True
+        Me.Label2.Location = New System.Drawing.Point(13, 348)
+        Me.Label2.Name = "Label2"
+        Me.Label2.Size = New System.Drawing.Size(0, 13)
+        Me.Label2.TabIndex = 4
         '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(1381, 595)
+        Me.Controls.Add(Me.Label2)
+        Me.Controls.Add(Me.Label1)
         Me.Controls.Add(Me.tbNotes)
         Me.Controls.Add(Me.tbDisplay)
         Me.Controls.Add(Me.MenuStrip1)
@@ -123,4 +143,6 @@ Partial Class Form1
     Friend WithEvents CPUVPlayerToolStripMenuItem1 As ToolStripMenuItem
     Friend WithEvents PlayerVPlayerToolStripMenuItem1 As ToolStripMenuItem
     Friend WithEvents tbNotes As TextBox
+    Friend WithEvents Label1 As Label
+    Friend WithEvents Label2 As Label
 End Class

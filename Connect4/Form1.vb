@@ -79,7 +79,7 @@
             ok = PlaceCounter(b, col, player)
         End If
         DisplayBoard(b) ' so we see the updated notes
-        Dim x As MsgBoxResult = MsgBox("Player " & player.ToString & " moves column " & (col + 1).ToString, vbOKCancel, "Player " & player.ToString)
+        Dim x As MsgBoxResult = MsgBox("Player " & player.ToString & " moves column " & (col).ToString, vbOKCancel, "Player " & player.ToString)
         If x = vbCancel Then
             b.status = "Player " & player.ToString & " quit!"
         End If
@@ -91,17 +91,24 @@
         Dim x As String = ""
         Dim ok As Boolean = False
 
+        Dim pl As String = "O"
+        If player = 2 Then
+            pl = "X"
+        End If
+
         While Not ok
-            x = InputBox("Make a move (1 to " & consts.cols.ToString & ") or type QUIT", "Player " & player.ToString)
+
+
+            x = InputBox("Make a move (0 to " & (consts.cols - 1).ToString & ") or type QUIT", "Player " & player.ToString)
             If x.ToLower = "quit" Then
                 b.status = "Player " & player.ToString & " quit!"
                 Exit Sub
             End If
             If Len(x) = 1 And IsNumeric(x) Then
-                If CInt(x) <= consts.cols And CInt(x) > 0 Then
+                If CInt(x) < consts.cols And CInt(x) >= 0 Then
                     b.notes = ""
-                    Dim thisscore As Integer = ScoreMove(b, x - 1, player, 0)
-                    ok = PlaceCounter(b, x - 1, player)
+                    Dim thisscore As Integer = ScoreMove(b, x, player, 0)
+                    ok = PlaceCounter(b, x, player)
                     DisplayBoard(b) ' so we see the updated notes
                     If thisscore = 6400 Then
                         b.status = "Player " & player.ToString & " wins!"
@@ -140,12 +147,27 @@
     Private Sub DisplayBoard(ByRef b As board)
 
         Dim s As String = ""
+        Dim footer As String = ""
         For j As Integer = b.cells.GetLowerBound(1) To b.cells.GetUpperBound(1)
             For i As Integer = b.cells.GetLowerBound(0) To b.cells.GetUpperBound(0)
-                s = s & b.cells(i, j).ToString() & " "
+                Dim cell As String = " "
+                Select Case b.cells(i, j)
+                    Case 1
+                        cell = "O"
+                    Case 2
+                        cell = "X"
+                End Select
+                s = s & "[" & cell & "] "
+                If (j = 0) Then
+                    footer = footer & " " & CStr(i) & "  "
+                End If
             Next
             s = s & vbCrLf
         Next
+        s = s & vbCrLf
+        s = s & footer & vbCrLf
+        s = s & vbCrLf
+
         s = s & b.status & vbCrLf
         tbNotes.Text = b.notes
         tbNotes.Refresh()
@@ -259,11 +281,11 @@
                         If exp2 <> "" Then
                             exp2 = exp2 & " / "
                         End If
-                        exp2 = exp2 & (j + 1).ToString() & ":" & thisotherscore.ToString
+                        exp2 = exp2 & (j).ToString() & ":" & thisotherscore.ToString
 
                         If thisotherscore > bestotherscore Then
                             bestotherscore = thisotherscore
-                            bestothermove = (j + 1).ToString & ":" & bestotherscore
+                            bestothermove = (j).ToString & ":" & bestotherscore
                         End If
                         If (bestotherscore >= 400) Then
                             GoTo LeaveLoop
@@ -276,7 +298,7 @@ LeaveLoop:
         End If
 
         If ply = 1 Then
-            b.notes = b.notes & vbCrLf & player.ToString() & ": " & ply.ToString & ": " & (col + 1).ToString() & " [" & exp & "] {" & exp2 & "} " & highscore & ": " & bestothermove.ToString
+            b.notes = b.notes & vbCrLf & player.ToString() & ": " & ply.ToString & ": " & (col).ToString() & " [" & exp & "] {" & exp2 & "} " & highscore & ": " & bestothermove.ToString
         End If
         highscore = highscore + highcount ' being able to do something twice beats being able to do it once
 
@@ -322,4 +344,5 @@ LeaveLoop:
         PlayGame(False, True)
 
     End Sub
+
 End Class
