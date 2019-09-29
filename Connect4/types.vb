@@ -24,11 +24,16 @@ Public Class board
         Next
     End Sub
 
-End Class
+    Public Function Clone() As board
+        Dim b2 As board = New board()
 
-Public Class col
-
-    Public celllist() As cell = Nothing
+        For i As Integer = cells.GetLowerBound(0) To cells.GetUpperBound(0)
+            For j As Integer = cells.GetLowerBound(1) To cells.GetUpperBound(1)
+                b2.cells(i, j) = New cell
+            Next
+        Next
+        Return b2
+    End Function
 
 End Class
 

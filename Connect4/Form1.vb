@@ -56,8 +56,7 @@
         b.notes = ""
 
         For i As Integer = 0 To consts.cols - 1
-            Dim thisscore As Integer = ScoreMove(b, i, player)
-            b.notes = b.notes & thisscore & " "
+            Dim thisscore As Integer = ScoreMove(b, i, player, 1)
             If thisscore > topscore OrElse ((thisscore = topscore) And (New Random().Next(2) = 1)) Then
                 col = i
                 topscore = thisscore
@@ -86,21 +85,24 @@
         Dim ok As Boolean = False
 
         While Not ok
-            x = InputBox("Make a move (1 to " & consts.cols.ToString & ") or type QUIT", "")
+            x = InputBox("Make a move (1 to " & consts.cols.ToString & ") or type QUIT", "Player " & player.ToString)
             If x.ToLower = "quit" Then
                 b.status = "Player " & player.ToString & " quit!"
                 Exit Sub
             End If
             If Len(x) = 1 And IsNumeric(x) Then
                 If CInt(x) <= consts.cols And CInt(x) > 0 Then
-                    Dim thisscore As Integer = ScoreMove(b, x - 1, player)
+                    b.notes = ""
+                    Dim thisscore As Integer = ScoreMove(b, x - 1, player, 0)
                     ok = PlaceCounter(b, x - 1, player)
+                    DisplayBoard(b) ' so we see the updated notes
                     If thisscore >= 400 Then
                         b.status = "Player " & player.ToString & " wins!"
                         Exit Sub
                     End If
                 End If
             End If
+
         End While
 
     End Sub
@@ -138,7 +140,8 @@
             s = s & vbCrLf
         Next
         s = s & b.status & vbCrLf
-        s = s & b.notes & vbCrLf
+        tbNotes.Text = b.notes
+        tbNotes.Refresh()
 
         tbDisplay.Text = s
         tbDisplay.Refresh()
@@ -157,16 +160,18 @@
         Return b.cells(col, row).value
     End Function
 
-    Private Function ScoreMove(ByRef b As board, col As Integer, player As Integer) As Integer
+    Private Function ScoreMove(ByRef b As board, col As Integer, player As Integer, ply As Integer) As Integer
 
         Dim dcol() As Integer = {0, 1, 1, 1, 0, -1, -1, -1}
         Dim drow() As Integer = {1, 1, 0, -1, -1, -1, 0, 1}
+        Dim dir() As String = {"S", "SE", "E", "NE", "N", "NW", "W", "SW"}
         Dim scores() As Integer = {0, 0, 0, 0, 0, 0, 0, 0}
         Dim highscore As Integer = 0
         Dim highcount As Integer = 0
 
-        Dim row As Integer = GetCellPos(b, col)
+        Dim row As Integer = GetCellPos(b, col) - 1
         Dim exp As String = ""
+        Dim bestotherscore As Integer = -9999
 
         For d As Integer = 0 To 7
             Dim scol As Integer = col
@@ -208,13 +213,34 @@
                 scores(d) = -1
             End If
             If exp <> "" Then
-                exp = exp & "/"
+                exp = exp & " / "
             End If
-            exp = exp & scores(d).ToString
+            exp = exp & dir(d) & ":" & scores(d).ToString
+
+
+            If ply >= 1 And ply <= 1 And highscore < 400 Then
+                Dim b2 As board = b.Clone()
+                Dim otherplayer As Integer = 3 - player
+                If (PlaceCounter(b2, col, player)) Then
+                    For j As Integer = 0 To consts.cols - 1
+                        Dim thisotherscore As Integer = ScoreMove(b2, j, otherplayer, ply + 1)
+                        If thisotherscore > bestotherscore Then
+                            bestotherscore = thisotherscore
+                        End If
+                        If (bestotherscore >= 400) Then
+                            GoTo LeaveLoop
+                        End If
+                    Next
+LeaveLoop:
+                    highscore = highscore - bestotherscore
+                End If
+            End If
 
         Next
-        b.notes = b.notes & vbCrLf & "[" & exp & "] "
-        highscore = highscore + highcount - 1 ' being able to do something twice beats being able to do it once
+
+        b.notes = b.notes & vbCrLf & player.ToString() & ": " & ply.ToString & ": " & (col + 1).ToString() & " [" & exp & "] " & highscore & ": " & bestotherscore.ToString
+        highscore = highscore + highcount ' being able to do something twice beats being able to do it once
+
         Return highscore
 
     End Function
