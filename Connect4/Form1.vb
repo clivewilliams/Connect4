@@ -52,19 +52,26 @@
     Public Sub MakeCPUMove(ByRef b As board, player As Integer)
 
         Dim col As Integer = 1
-        Dim topscore As Integer = -99999
+        Dim topscore As Integer = -9999
         b.notes = ""
 
+        Dim validmove As Boolean = False
         For i As Integer = 0 To consts.cols - 1
             Dim thisscore As Integer = ScoreMove(b, i, player, 1)
+            If thisscore > -9999 Then
+                validmove = True
+            End If
             If thisscore > topscore OrElse ((thisscore = topscore) And (New Random().Next(2) = 1)) Then
                 col = i
                 topscore = thisscore
             End If
-            If thisscore >= 400 Then
+            If thisscore = 6400 Then
                 b.status = "Player " & player.ToString & " wins!"
             End If
         Next
+        If Not validmove Then
+            b.status = "It's a draw!"
+        End If
 
         Dim ok As Boolean = False
 
@@ -96,7 +103,7 @@
                     Dim thisscore As Integer = ScoreMove(b, x - 1, player, 0)
                     ok = PlaceCounter(b, x - 1, player)
                     DisplayBoard(b) ' so we see the updated notes
-                    If thisscore >= 400 Then
+                    If thisscore = 6400 Then
                         b.status = "Player " & player.ToString & " wins!"
                         Exit Sub
                     End If
@@ -177,6 +184,7 @@
         Dim exp As String = ""
         Dim exp2 As String = ""
         Dim bestotherscore As Integer = -9999
+        Dim iwin As Boolean = False
 
         For d As Integer = 0 To 7
             Dim scol As Integer = col
@@ -195,6 +203,11 @@
                 srow = srow + drow(d)
                 howmany = howmany + 1
             End While
+
+            If howmany >= 4 Then
+                iwin = True
+                Return 6400 ' I win!
+            End If
 
             Dim usefulmove As Boolean = True ' assume the best
             If GetCell(b, scol, srow) <> 0 And howmany <= 3 Then
@@ -236,7 +249,7 @@
         Next
 
         Dim bestothermove As String = ""
-        If ply >= 1 And ply <= 1 And highscore < 400 Then ' Recursively figure out the best move for the other player
+        If ply >= 1 And ply <= 6 Then ' Recursively figure out the best move for the other player
             Dim b2 As board = b.Clone()
             Dim otherplayer As Integer = 3 - player
             If (PlaceCounter(b2, col, player)) Then
@@ -258,7 +271,7 @@
                     End If
                 Next
 LeaveLoop:
-                highscore = highscore - bestotherscore
+                highscore = (highscore - bestotherscore) / ply
             End If
         End If
 
